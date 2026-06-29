@@ -4,6 +4,11 @@ Pkg.instantiate()
 
 using EcoEvoSim, Plots, Random
 
+# Pkg.add("Plots")
+# Pkg.add("CSV")
+# Pkg.add("Random")
+# Pkg.status ()
+
 # %%
 # ─── Shared ecological parameters ────────────────────────────────────────────
 
@@ -74,11 +79,11 @@ plot!(pg1, z_plot, _b_chemo.(z_plot);
 hline!(pg1, [0.0]; color=:gray, linestyle=:dash, linewidth=1, label="extinction threshold")
 
 pg2 = plot(z_plot, _b.(z_plot);
-    label="b(z) — untreated", color=:steelblue, linewidth=2,
+    label="b(z)—untreated", color=:steelblue, linewidth=2,
     xlabel="Proliferation capacity (z)", ylabel="Per-capita growth rate",
     title="Option 1b — Targeted therapy", legend=:topleft)
 plot!(pg2, z_plot, _b_targeted.(z_plot);
-    label="b_treated(z)  (z_target = $z_target, w = $kill_width)", color=:crimson, linewidth=2)
+    label="b_treated(z) (w=$kill_width)", color=:crimson, linewidth=2) #z_target = $z_target,
 plot!(pg2, z_plot, _kill.(z_plot);
     label="kill term (Gaussian)", color=:darkorange, linewidth=1.5, linestyle=:dash)
 hline!(pg2, [0.0]; color=:gray, linestyle=:dash, linewidth=1, label="extinction threshold")
@@ -88,7 +93,7 @@ pg = plot(pg1, pg2; layout=(1, 2), size=(1100, 420), margin=5Plots.mm)
 savefig(pg, "fig_growth_fns.png")
 println("fig_growth_fns.png written.")
 
-
+# %%
 # ═══════════════════════════════════════════════════════════════════════════════
 # OPTION 1a — Chemotherapy
 # ───────────────────────────────────────────────────────────────────────────────
@@ -107,7 +112,8 @@ p1a = plotEvo(lineage_chemo;
     title="Option 1a: Chemotherapy (drug_conc = $drug_conc_chemo)",
     xlabel="Proliferation capacity (z)", ylabel="Mutation event")
 
-
+    
+# %%
 # ═══════════════════════════════════════════════════════════════════════════════
 # OPTION 1b — Targeted Therapy
 # ───────────────────────────────────────────────────────────────────────────────
@@ -129,6 +135,7 @@ p1b = plotEvo(lineage_targeted;
     ylabel="Mutation event")
 
 
+# %%
 # ═══════════════════════════════════════════════════════════════════════════════
 # OPTION 2 — Sequential Phases (Adaptive / Intermittent Therapy)
 # ───────────────────────────────────────────────────────────────────────────────
@@ -159,7 +166,7 @@ p2 = plotEvo(lineage_phases;
 hline!(p2, [n_steps, 2*n_steps];
     linestyle=:dash, color=:black, linewidth=1.5, label=["Treatment on" "Treatment off"])
 
-
+# %%
 # ═══════════════════════════════════════════════════════════════════════════════
 # OPTION 3 — Time-Varying Drug (Pharmacokinetics)
 # ───────────────────────────────────────────────────────────────────────────────
@@ -198,6 +205,7 @@ p3 = plotEvo(lineage_pk;
     ylabel="Mutation event")
 
 
+# %%
 # ─── Summary figure ───────────────────────────────────────────────────────────
 
 p_all = plot(p1a, p1b, p2, p3;
