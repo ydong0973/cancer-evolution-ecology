@@ -1,0 +1,68 @@
+
+
+1.	Cancer community ecology: my colleagues and I are developing an eco-evolutionary adaptive dynamics-style simulator. Due to my student’s strong programming experience, she will help further develop and test this simulator to improve functionality, ensure robustness, etc. She will then use this Julia package to run some simulations to explore “ecological cascade therapy” and double bind therapies within cancer community ecology.
+
+
+2.	The evolutionary ecology of Chromophobe Renal Cell Carcinoma (ChRCC): together with a colleague from the University of Pittsburgh, I am exploring the evolutionary ecology of ChRCC. My student will work with me to develop mathematical models and simulations that capture how massive chromosome loss in ChRCC cells leads to cell cycle arrest-induced senescence. This ecosystem engineering effect promotes an immunosuppressive environment via chronic inflammation and changes the evolutionary selection pressures in the tumor microenvironment to promote cycling cancer cells with a fitness advantage. Mathematical models of this process will help elucidate perplexing experimental observations of widespread chromosomal loss and dormancy followed by TP53 mutation and polyploidization to re-enter the cell cycle and seed recurrence.
+
+
+
+
+
+
+
+Here’s a preliminary aims page for the ChRCC project in case you’re interested. I think these projects will be a good starting point for you: the CCE project will allow you to both use your programming expertise to test and improve the simulation software while learning about eco-evolutionary mathematical models in cancer, and the second project will allow you to learn how to develop basic mathematical models from “scratch” to describe perplexing biomedical observations! 
+
+
+
+
+We’re currently writing a manuscript (attached) in which we’ve introduced a Julia package for eco-evolutionary simulations in an adaptive dynamics like framework, with an application to cancer community ecology. Would you be able to follow the instructions in the manuscript to produce Fig 2? Any thoughts you have on which portions are tricky to implement/are unclear and need more directions (or sections you think are obvious and can do without as much explanation) would be useful. Also, any stress testing you can perform to see that the package holds up with different models, parameter combos, etc. would be great!
+
+
+
+1. different seeds (45 VS 54321) give slightly different pattern  -- what does the pattern mean? -- to read more 
+2. stress test of the parameters ? 
+3. stress test for mutation events and step size (long-term stability)  -- variance from 0.0001^2 to 0.01^2; noMutation as the mutationGenerator; 50,000 mutation events.
+4. abstol = 1e-8 vs 1e-14
+5. different z values: [0.1], [0.3], [0.5], [0.7]
+
+
+-----------------------------------------------------------------------
+
+(6) Re package documentation: I of course very much welcome your help! Anugraha has also volunteered. This is not something we have to be ready with by the time we submit the manuscript, but should eventually be done. I will be happy to coordinate with you & Anugraha, and to help with the initial steps.
+
+
+------------------------------------------------------------------------
+
+different trade-offs: 
+cascade; homogenise and eradicate
+
+promise of fasting 
+chemotherapy primer 
+overlap 
+
+fasting —> free fatty acid acid 
+immune cells have difficulty to penetrate the cancer cells 
+get the immune cells adapted to the fatty environment before the treatment 
+
+cancer social science — body and drug can differentiate the cancer cells and normal cells 
+
+baseline — consumer resource models 
+1. — modulate the amount of food —> proliferation rate — differentiate more 
+* tune level of resource 2 
+2. tune proliferation rate (chemotherapy) 
+3. fatty acid — immuno-attack 
+* model the immune response 
+4. single constant nutrient ???
+5. explore effects of fasting in medicine 
+
+
+
+
+fasting — immune system; 
+reduce side effect —> so we can give more therapy 
+primer cause normal cells —> cell cycle arrest 
+
+the promise of fasting as a chemotherapeutic primer. The idea is that chemotherapy often has strong side effects on normal cells as well as cancer cells. However, fasting causes normal cells to exit the cell cycle and undergo arrest, whereas cancer cells are less affected by the lack of resources and undergo autonomous proliferation. This then allows the chemotherapeutic agent to differentiate among normal and cancer cells more effectively, improving its efficacy. Notably, this is not an effect that fasting alone can achieve: if used as the sole therapeutic modality, cancer cells would take over the population. There are other extensions that could be made to this base idea: baseline intermittent fasting, impact of fasting on the immune system, and perhaps even some of the cancer biosemiotics ideas I’ve been playing with. The base mathematical model would be competitive Lotka-Volterra consumer-resource, with perhaps an equation for immune attack as well.
+
+
