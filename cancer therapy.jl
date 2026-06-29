@@ -62,7 +62,8 @@ init = ecoDyn(Community([1.0], [z_init]), make_config(growthFn))
 # Shows the fitness landscape each option imposes before running simulations.
 # ─────────────────────────────────────────────────────────────────────────────
 
-z_plot = range(0.0, 1.2; length=300)
+z_plot  = range(0.0, 1.2; length=300)
+x_range = (first(z_plot), last(z_plot))   # shared x limits for growth fn plots and evo plots
 
 # scalar wrappers so we can broadcast over z_plot (EcoEvoSim functions take vectors)
 _b(z)          = growthFn([z])
@@ -73,7 +74,7 @@ _kill(z)       = kill_term([z])
 pg1 = plot(z_plot, _b.(z_plot);
     label="b(z) — untreated", color=:steelblue, linewidth=2,
     xlabel="Proliferation capacity (z)", ylabel="Per-capita growth rate",
-    title="Option 1a — Chemotherapy", legend=:topleft)
+    title="Option 1a — Chemotherapy", legend=:topleft, xlims=x_range)
 plot!(pg1, z_plot, _b_chemo.(z_plot);
     label="b_treated(z)  (drug_conc = $drug_conc_chemo)", color=:crimson, linewidth=2)
 hline!(pg1, [0.0]; color=:gray, linestyle=:dash, linewidth=1, label="extinction threshold")
@@ -81,7 +82,7 @@ hline!(pg1, [0.0]; color=:gray, linestyle=:dash, linewidth=1, label="extinction 
 pg2 = plot(z_plot, _b.(z_plot);
     label="b(z)—untreated", color=:steelblue, linewidth=2,
     xlabel="Proliferation capacity (z)", ylabel="Per-capita growth rate",
-    title="Option 1b — Targeted therapy", legend=:topleft)
+    title="Option 1b — Targeted therapy", legend=:topleft, xlims=x_range)
 plot!(pg2, z_plot, _b_targeted.(z_plot);
     label="b_treated(z) (w=$kill_width)", color=:crimson, linewidth=2) #z_target = $z_target,
 plot!(pg2, z_plot, _kill.(z_plot);
@@ -92,6 +93,20 @@ vline!(pg2, [z_target]; color=:darkorange, linestyle=:dot, linewidth=1, label="z
 pg = plot(pg1, pg2; layout=(1, 2), size=(1100, 420), margin=5Plots.mm)
 savefig(pg, "fig_growth_fns.png")
 println("fig_growth_fns.png written.")
+
+
+# %% 
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONTROL -- no treatment 
+
+Random.seed!(test_seed)
+
+lineage_control = evolve(init, make_config(growthFn), n_steps; showProgress=false)
+p0 = plotEvo(lineage_control;
+    title="Control -- no treatment",
+    xlabel="Proliferation capacity (z)", ylabel="Mutation event")
+xlims!(p0, x_range)
+
 
 # %%
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -111,6 +126,7 @@ lineage_chemo = evolve(init, config_chemo, n_steps; showProgress=false)
 p1a = plotEvo(lineage_chemo;
     title="Option 1a: Chemotherapy (drug_conc = $drug_conc_chemo)",
     xlabel="Proliferation capacity (z)", ylabel="Mutation event")
+xlims!(p1a, x_range)
 
     
 # %%
@@ -131,8 +147,9 @@ lineage_targeted = evolve(init, config_targeted, n_steps; showProgress=false)
 
 p1b = plotEvo(lineage_targeted;
     title="Option 1b: Targeted therapy (z_target = $z_target)",
-    xlabel="Proliferation capacity (z)", 
+    xlabel="Proliferation capacity (z)",
     ylabel="Mutation event")
+xlims!(p1b, x_range)
 
 
 # %%
@@ -208,10 +225,20 @@ p3 = plotEvo(lineage_pk;
 # %%
 # ─── Summary figure ───────────────────────────────────────────────────────────
 
-p_all = plot(p1a, p1b, p2, p3;
-            layout=(2, 2), 
-            size=(1200, 900), 
-            margin=5Plots.mm)
+p_all = plot(
+        p0, p1a, p1b; 
+        # p1a, p1b, p2, p3;
+        layout=(3, 1), 
+        size=(600, 1800), 
+        margin=5Plots.mm)
+
+
+# p_all = plot(
+#         p1a, p1b, p2, p3;
+#         layout=(2, 2), 
+#         size=(1200, 900), 
+#         margin=5Plots.mm)
+
 
 savefig(p_all, "fig_therapy.png")
 println("fig_therapy.png written.")
