@@ -41,12 +41,11 @@ z_target           = 0.6    # Option 1b: trait value the drug targets
 kill_width         = 0.08   # Option 1b: width of Gaussian kill window (smaller = more specific)
 drug_conc_targeted = 0.9    # Option 1b: Gaussian kill peak height (0-1)
 
-C_max              = 0.8    # Option 3: peak drug concentration at dose time (t=0 of each settling)
-k_decay            = 0.05   # Option 3: exponential clearance rate (higher = faster clearance)
 
 # ─── Therapy growth functions — defined once, shared by plots & simulations ───
 
 growthFn_chemo(z)    = growthFn(z) - drug_conc_chemo * sum(z)
+
 kill_term(z)         = drug_conc_targeted * exp(-((sum(z) - z_target)^2) / (2 * kill_width^2))
 growthFn_targeted(z) = growthFn(z) - kill_term(z)
 
@@ -62,7 +61,7 @@ init = ecoDyn(Community([1.0], [z_init]), make_config(growthFn))
 # Shows the fitness landscape each option imposes before running simulations.
 # ─────────────────────────────────────────────────────────────────────────────
 
-z_plot  = range(0.0, 1.2; length=300)
+z_plot  = range(0.0, 0.8; length=300)
 x_range = (first(z_plot), last(z_plot))   # shared x limits for growth fn plots and evo plots
 
 # scalar wrappers so we can broadcast over z_plot (EcoEvoSim functions take vectors)
@@ -114,7 +113,7 @@ xlims!(p0, x_range)
 # ───────────────────────────────────────────────────────────────────────────────
 # Drug kills fast-proliferating cells proportionally to z.
 # Selects for slow-growing resistant clones (low z).
-# Implementation: subtract a linear death term from growthFn.
+# Implementation: subtract a linear death term from growthFn. [or maybe make this to non-linear]
 #   b_treated(z) = b(z) - drug_conc * z
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -162,9 +161,9 @@ xlims!(p1b, x_range)
 #
 # Implementation: evolve! extends the history in place so mutation event numbers
 # are continuous across phases. Config is swapped between phases.
-#   Phase 1 [1 – n_steps]        : no treatment (baseline evolution)
-#   Phase 2 [n_steps+1 – 2*n]   : chemo on  (uses growthFn_chemo from option1a) 
-#   Phase 3 [2*n_steps+1 – 3*n] : treatment withdrawn
+#   Phase 1 [1 –> n_steps]        : no treatment (baseline evolution)
+#   Phase 2 [n_steps+1 –> 2*n]   : chemo on  (uses growthFn_chemo from option 1a) 
+#   Phase 3 [2*n_steps+1 –> 3*n] : treatment withdrawn
 # ─────────────────────────────────────────────────────────────────────────────
 
 config_off = make_config(growthFn)         # no treatment
@@ -178,12 +177,16 @@ EcoEvoSim.evolve!(lineage_phases, config_on,  n_steps; showProgress=false)
 EcoEvoSim.evolve!(lineage_phases, config_off, n_steps; showProgress=false)
 
 p2 = plotEvo(lineage_phases;
-    title="Option 2: Sequential phases (off → on → off)",
+    title="Option 2: Sequential phases (off → on → off) 
+    Chemotherapy (drug_conc = $drug_conc_chemo)",
     xlabel="Proliferation capacity (z)", ylabel="Mutation event")
 hline!(p2, [n_steps, 2*n_steps];
-    linestyle=:dash, color=:black, linewidth=1.5, label=["Treatment on" "Treatment off"])
+    linestyle=:dash, color=:black, linewidth=1.5, label=["Treatment on"])
+xlims!(p2, x_range)
 
-# %%
+plot!(p2; legend=(0.1, 0.5))
+
+# %% 
 # ═══════════════════════════════════════════════════════════════════════════════
 # OPTION 3 — Time-Varying Drug (Pharmacokinetics)
 # ───────────────────────────────────────────────────────────────────────────────
@@ -199,46 +202,51 @@ hline!(p2, [n_steps, 2*n_steps];
 # — use Rodas5() with finite maxTime.
 # ─────────────────────────────────────────────────────────────────────────────
 
-ecology_pk = unstructuredModel() do i, n, z, aux, S, t
-    drug_effect = C_max * exp(-k_decay * t) * sum(z[i])
-    b_i = growthFn(z[i]) - drug_effect
-    n[i] * (b_i + sum(kernelFn(z[i], z[j]) * n[j] for j in 1:S))
-end
 
-config_pk = EcoEvoConfig(
-    ecoDyn            = ecology_pk,
-    mutationGenerator = generateMutantWeighted(invaderPopsize=iv, variance=mv),
-    integrationParams = IntegrationParams(maxTime=200.0, algorithm=Rodas5(), abstol=at, reltol=rt),
-    extThreshold      = et
-)
+# C_max              = 0.8    # Option 3: peak drug concentration at dose time (t=0 of each settling)
+# k_decay            = 0.05   # Option 3: exponential clearance rate (higher = faster clearance)
 
-Random.seed!(test_seed)
-init3 = ecoDyn(Community([1.0], [z_init]), config_pk)
-lineage_pk = evolve(init3, config_pk, n_steps; showProgress=false)
+# ecology_pk = unstructuredModel() do i, n, z, aux, S, t
+#     drug_effect = C_max * exp(-k_decay * t) * sum(z[i])
+#     b_i = growthFn(z[i]) - drug_effect
+#     n[i] * (b_i + sum(kernelFn(z[i], z[j]) * n[j] for j in 1:S))
+# end
 
-p3 = plotEvo(lineage_pk;
-    title="Option 3: PK drug (C_max=$C_max, k_decay=$k_decay)",
-    xlabel="Proliferation capacity (z)",
-    ylabel="Mutation event")
+# config_pk = EcoEvoConfig(
+#     ecoDyn            = ecology_pk,
+#     mutationGenerator = generateMutantWeighted(invaderPopsize=iv, variance=mv),
+#     integrationParams = IntegrationParams(maxTime=200.0, algorithm=Rodas5(), abstol=at, reltol=rt),
+#     extThreshold      = et
+# )
+
+# Random.seed!(test_seed)
+# init3 = ecoDyn(Community([1.0], [z_init]), config_pk)
+# lineage_pk = evolve(init3, config_pk, n_steps; showProgress=false)
+
+# p3 = plotEvo(lineage_pk;
+#     title="Option 3: PK drug (C_max=$C_max, k_decay=$k_decay)",
+#     xlabel="Proliferation capacity (z)",
+#     ylabel="Mutation event")
 
 
 # %%
 # ─── Summary figure ───────────────────────────────────────────────────────────
 
+# p_all = plot(
+#         p0, p1a, p1b; 
+#         # p1a, p1b, p2, p3;
+#         layout=(3, 1), 
+#         size=(800, 1200), 
+#         margin=5Plots.mm)
+
 p_all = plot(
-        p0, p1a, p1b; 
-        # p1a, p1b, p2, p3;
-        layout=(3, 1), 
-        size=(600, 1800), 
+        p0, p1a, p1b, p2;
+        layout=(2, 2), 
+        size=(1200, 900), 
         margin=5Plots.mm)
 
 
-# p_all = plot(
-#         p1a, p1b, p2, p3;
-#         layout=(2, 2), 
-#         size=(1200, 900), 
-#         margin=5Plots.mm)
-
+plot!(p_all)
 
 savefig(p_all, "fig_therapy.png")
 println("fig_therapy.png written.")
